@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Face Authentication System - Secure biometric access control">
+  <title>Home | FaceAuth</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Navigation -->
+    <nav class="nav">
+      <a href="/" class="nav-brand">
+        <span class="icon">🔐</span>
+        <span>FaceAuth</span>
+      </a>
+      <div class="nav-links">
+        <a href="/" class="nav-link active">Home</a>
+        <a href="/register" class="nav-link">Registration</a>
+        <a href="/admin/dashboard" class="nav-link" style="color:var(--warning);">⚙ Admin</a>
+      </div>
+    </nav>
+
+    <!-- ===================== LOCKED STATE ===================== -->
+    <div id="lockedView">
+      <div class="lock-screen">
+        <div class="lock-icon">🔒</div>
+        <h1 class="lock-title">System Locked</h1>
+        <p class="lock-subtitle">Authenticate your face to unlock access</p>
+
+        <!-- Camera feed for authentication -->
+        <div class="auth-video-section">
+          <div class="card">
+            <div class="card-body" style="padding: var(--space-md);">
+              <div class="video-wrapper" id="authVideoWrapper" style="display: none;">
+                <video id="authCam" autoplay playsinline style="width: 100%; border-radius: 8px; transform: scaleX(-1); background: #000;"></video>
+                <div class="video-overlay">
+                  <div class="live-dot"></div>
+                  <span class="live-text">Scanning</span>
+                </div>
+              </div>
+              <div id="authStatusBar" class="auth-status-bar scanning" style="display: none;">
+                <span class="spinner"></span> Scanning face...
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" id="authBtn" onclick="startAuth()">
+          🔓 Authenticate
+        </button>
+        <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: var(--space-md);">
+          Position your face clearly in front of the camera
+        </p>
+      </div>
+    </div>
+
+    <!-- ===================== UNLOCKED STATE ===================== -->
+    <div id="unlockedView" style="display: none;">
+      <div class="unlock-screen">
+        <div class="welcome-header">
+          <div class="welcome-icon">🎉</div>
+          <h1 class="welcome-title">Access Granted</h1>
+          <p class="welcome-user">Welcome back, <strong id="welcomeUser">User</strong></p>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="dashboard-grid">
+          <div class="card dash-card">
+            <div class="dash-icon">🛡️</div>
+            <h3>Security Status</h3>
+            <p><span class="badge badge-success">Active</span></p>
+            <p style="margin-top: 8px;">Anti-spoof protection verified</p>
+          </div>
+
+          <div class="card dash-card">
+            <div class="dash-icon">👤</div>
+            <h3>Identity Verified</h3>
+            <p>Match confidence: <strong id="matchConfidence">—</strong></p>
+            <p style="margin-top: 8px;">Two-stage biometric check passed</p>
+          </div>
+
+          <div class="card dash-card">
+            <div class="dash-icon">📊</div>
+            <h3>System Info</h3>
+            <p>Registered Users: <strong id="dashUserCount">—</strong></p>
+            <p style="margin-top: 8px;">Encrypted identity database</p>
+          </div>
+
+          <div class="card dash-card">
+            <div class="dash-icon">📝</div>
+            <h3>Manage Users</h3>
+            <p>Add, remove, or rename faces</p>
+            <a href="/register" class="btn btn-ghost btn-sm" style="margin-top: 12px;">
+              Go to Registration →
+            </a>
+          </div>
+        </div>
+
+        <!-- Action buttons after unlock -->
+        <div style="display:flex; gap:16px; justify-content:center; margin-top:var(--space-xl); flex-wrap:wrap;">
+          <a id="myDashboardBtn" href="/user/__/dashboard" class="btn btn-primary btn-lg">
+            📊 My Dashboard
+          </a>
+          <a href="/admin/dashboard" class="btn btn-ghost btn-lg"
+            style="border:1px solid var(--warning); color:var(--warning);">
+            ⚙ Admin Dashboard
+          </a>
+        </div>
+
+        <!-- Lock button -->
+        <div style="text-align: center; margin-top: var(--space-xl);">
+          <button class="btn btn-danger btn-lg" onclick="lockSystem()">
+            🔒 Lock System
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- 2FA PIN Entry Modal -->
+  <div class="modal-overlay" id="pinModal"
+    style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
+    <div class="modal"
+      style="background:#161b22;border:1px solid #30363d;border-radius:16px;padding:32px;min-width:320px;text-align:center;">
+      <div style="font-size:2rem;margin-bottom:12px;">🔑</div>
+      <h2 style="font-size:1.1rem;margin-bottom:6px;">Enter Your PIN</h2>
+      <p style="color:#8b949e;font-size:0.82rem;margin-bottom:20px;">Face verified. Enter your 4-8 digit PIN to complete
+        authentication.</p>
+
+      <input type="password" id="pinInput" class="pin-input" maxlength="8" placeholder="••••"
+        autocomplete="new-password"
+        style="width:100%;padding:12px;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:#e6edf3;font-size:1.5rem;text-align:center;letter-spacing:0.3em;outline:none;margin-bottom:16px;"
+        onkeydown="if(event.key==='Enter') submitPIN()">
+
+      <button class="btn btn-primary" onclick="submitPIN()"
+        style="width:100%;padding:12px;border-radius:8px;background:#238636;border:none;color:#fff;font-size:0.9rem;font-weight:600;cursor:pointer;">Verify</button>
+      <button class="btn btn-secondary" onclick="cancelPIN()"
+        style="width:100%;padding:12px;border-radius:8px;background:transparent;border:1px solid #30363d;color:#fff;font-size:0.9rem;font-weight:600;cursor:pointer;margin-top:8px;">Cancel</button>
+
+      <div class="error-msg" id="pinError" style="color:#f85149;font-size:0.8rem;margin-top:10px;display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Set 2FA PIN Modal -->
+  <div class="modal-overlay" id="setPinModal"
+    style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;">
+    <div class="modal"
+      style="background:#161b22;border:1px solid #30363d;border-radius:16px;padding:32px;min-width:320px;text-align:center;">
+      <h3 style="margin-bottom:10px;">🔑 Set 2FA PIN</h3>
+      <p style="font-size:0.85rem; color:#8b949e; margin-bottom:16px;">
+        Update your 4-8 digit 2FA Security PIN.
+      </p>
+      <input type="password" id="setPinInput" class="pin-input" maxlength="8" placeholder="••••"
+        autocomplete="new-password"
+        style="width:100%;padding:12px;border-radius:8px;border:1px solid #30363d;background:#0d1117;color:#e6edf3;font-size:1.5rem;text-align:center;letter-spacing:0.3em;outline:none;margin-bottom:16px;">
+
+      <div class="error-msg" id="setPinError"
+        style="color:#f85149;font-size:0.8rem;margin-top:10px;display:none;margin-bottom:16px;"></div>
+
+      <div class="modal-buttons" style="display:flex; gap:10px;">
+        <button class="btn btn-secondary" onclick="closeSetPINModal()"
+          style="flex:1;padding:12px;border-radius:8px;background:transparent;border:1px solid #30363d;color:#fff;font-size:0.9rem;font-weight:600;cursor:pointer;">Cancel</button>
+        <button class="btn btn-primary" onclick="submitNewPIN()"
+          style="flex:1;padding:12px;border-radius:8px;background:#238636;border:none;color:#fff;font-size:0.9rem;font-weight:600;cursor:pointer;">Save
+          PIN</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let authPolling = null;
+    let isAuthenticating = false;
+
+    // ============================
+    // Toast
+    // ============================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+      toast.innerHTML = `<span>${icons[type] || ''}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.animation = 'toast-out 0.3s ease-in forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // ============================
+    // Check auth status on load
+    // ============================
+    async function checkStatus() {
+      try {
+        const res = await fetch('/api/auth_status');
+        const data = await res.json();
+        if (data.is_unlocked) {
+          showUnlocked(data.user);
+        }
+      } catch (e) { }
+    }
+
+    // ============================
+    // Start authentication
+    // ============================
+    let localStream = null;
+
+    async function stopCamera() {
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+      }
+      const video = document.getElementById('authCam');
+      if (video) video.srcObject = null;
+    }
+
+    // ============================
+    // Start authentication
+    // ============================
+    async function startAuth() {
+      const btn = document.getElementById('authBtn');
+      const videoWrapper = document.getElementById('authVideoWrapper');
+      const authCam = document.getElementById('authCam');
+      const statusBar = document.getElementById('authStatusBar');
+
+      statusBar.style.display = 'block';
+      statusBar.className = 'auth-status-bar scanning';
+      statusBar.innerHTML = '<span class="spinner"></span> Requesting camera access...';
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Starting...';
+      isAuthenticating = true;
+
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+        });
+        authCam.srcObject = localStream;
+        videoWrapper.style.display = 'block';
+        statusBar.innerHTML = '<span class="spinner"></span> Initializing camera...';
+      } catch (err) {
+        console.error(err);
+        showToast('Camera access denied or unavailable.', 'error');
+        statusBar.className = 'auth-status-bar denied';
+        statusBar.innerHTML = '❌ Camera access failed.';
+        resetAuthUI();
+        return;
+      }
+
+      // Wait a moment for camera to initialize
+      await new Promise(r => setTimeout(r, 1000));
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 640;
+      canvas.height = 480;
+      const ctx = canvas.getContext('2d');
+
+      let attempts = 0;
+      const maxAttempts = 20;
+
+      async function tryAuth() {
+        if (!isAuthenticating) {
+          stopCamera();
+          return;
+        }
+
+        attempts++;
+        statusBar.innerHTML = `<span class="spinner"></span> Scanning face... (attempt ${attempts}/${maxAttempts})`;
+
+        try {
+          ctx.drawImage(authCam, 0, 0, canvas.width, canvas.height);
+          const base64Data = canvas.toDataURL('image/jpeg', 0.85);
+
+          const res = await fetch('/api/authenticate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: base64Data }),
+          });
+          const data = await res.json();
+
+          if (data.status === 'access_granted') {
+            statusBar.className = 'auth-status-bar granted';
+            statusBar.innerHTML = `✅ ${data.message} (${(data.confidence * 100).toFixed(1)}%)`;
+            showToast(`Access Granted: ${data.user}`, 'success');
+            stopCamera();
+            setTimeout(() => { showUnlocked(data.user, data.confidence); }, 1500);
+            isAuthenticating = false;
+            return;
+          }
+
+          if (data.status === 'pending_pin') {
+            statusBar.className = 'auth-status-bar granted';
+            statusBar.innerHTML = '🔑 Face verified — enter PIN';
+            isAuthenticating = false;
+            stopCamera();
+            showPINModal(data.user);
+            return;
+          }
+
+          if (data.status === 'spoof_denied') {
+            statusBar.className = 'auth-status-bar denied';
+            statusBar.innerHTML = '⚠️ Spoof detected — use a real face';
+          } else if (data.status === 'unauthorized') {
+            statusBar.className = 'auth-status-bar denied';
+            statusBar.innerHTML = '❌ Unauthorized — face not recognized';
+          } else if (data.status === 'no_users') {
+            statusBar.className = 'auth-status-bar denied';
+            statusBar.innerHTML = '⚠️ No users registered — register first';
+            showToast('No registered users. Go to Registration page first.', 'error');
+            isAuthenticating = false;
+            stopCamera();
+            resetAuthUI();
+            return;
+          } else if (data.status === 'locked_out') {
+            statusBar.className = 'auth-status-bar denied';
+            statusBar.innerHTML = `🔒 <strong>Device Locked</strong> — resets in ${data.lockout_remaining}s`;
+          } else if (data.status === 'ip_blocked') {
+            statusBar.className = 'auth-status-bar denied';
+            statusBar.innerHTML = `🚫 <strong>IP Blocked</strong>`;
+            showToast('Your IP is permanently blocked.', 'error');
+            isAuthenticating = false;
+            stopCamera();
+            resetAuthUI();
+            return;
+          } else {
+            statusBar.className = 'auth-status-bar scanning';
+            statusBar.innerHTML = `<span class="spinner"></span> ${data.message || 'Scanning...'}`;
+          }
+        } catch (e) {
+          statusBar.innerHTML = '❌ Connection error';
+        }
+
+        if (attempts < maxAttempts && isAuthenticating) {
+          setTimeout(tryAuth, 1000);
+        } else if (isAuthenticating) {
+          statusBar.className = 'auth-status-bar denied';
+          statusBar.innerHTML = '❌ Authentication failed — try again';
+          showToast('Authentication failed. Please try again.', 'error');
+          stopCamera();
+          resetAuthUI();
+        }
+      }
+
+      tryAuth();
+    }
+
+    function resetAuthUI() {
+      isAuthenticating = false;
+      const btn = document.getElementById('authBtn');
+      btn.disabled = false;
+      btn.innerHTML = '🔓 Authenticate';
+    }
+
+    // ============================
+    // 2FA PIN Modal (Verify)
+    // ============================
+    let _pinUser = null;
+
+    function showPINModal(username) {
+      _pinUser = username;
+      const modal = document.getElementById('pinModal');
+      modal.style.display = 'flex';
+      document.getElementById('pinInput').value = '';
+      document.getElementById('pinError').style.display = 'none';
+      setTimeout(() => document.getElementById('pinInput').focus(), 100);
+    }
+
+    function cancelPIN() {
+      document.getElementById('pinModal').style.display = 'none';
+      _pinUser = null;
+      resetAuthUI();
+      document.getElementById('authVideoWrapper').style.display = 'block';
+      document.getElementById('authStatusBar').style.display = 'none';
+    }
+
+    async function submitPIN() {
+      const pin = document.getElementById('pinInput').value.trim();
+      if (!pin) return;
+
+      const btn = document.querySelector('#pinModal .btn-primary');
+      const origText = btn.innerHTML;
+      btn.innerHTML = 'Verifying...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/pin/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('pinModal').style.display = 'none';
+          showToast(`Access Granted: ${_pinUser}`, 'success');
+          showUnlocked(_pinUser);
+        } else {
+          document.getElementById('pinError').textContent = data.message || 'Incorrect PIN';
+          document.getElementById('pinError').style.display = 'block';
+          document.getElementById('pinInput').value = '';
+          document.getElementById('pinInput').focus();
+        }
+      } catch (e) {
+        document.getElementById('pinError').textContent = 'Network error';
+        document.getElementById('pinError').style.display = 'block';
+      } finally {
+        btn.innerHTML = origText;
+        btn.disabled = false;
+      }
+    }
+
+    // ============================
+    // 2FA PIN Modal (Set/Update)
+    // ============================
+    function showSetPINModal() {
+      const modal = document.getElementById('setPinModal');
+      modal.style.display = 'flex';
+      document.getElementById('setPinInput').value = '';
+      document.getElementById('setPinError').style.display = 'none';
+      setTimeout(() => document.getElementById('setPinInput').focus(), 100);
+    }
+
+    function closeSetPINModal() {
+      document.getElementById('setPinModal').style.display = 'none';
+    }
+
+    async function submitNewPIN() {
+      const pin = document.getElementById('setPinInput').value.trim();
+      if (!pin) return;
+
+      try {
+        const res = await fetch('/api/pin/set', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          closeSetPINModal();
+          showToast(`PIN updated successfully! It will be required on your next login.`, 'success');
+        } else {
+          document.getElementById('setPinError').textContent = data.message || 'Error setting PIN';
+          document.getElementById('setPinError').style.display = 'block';
+        }
+      } catch (e) {
+        document.getElementById('setPinError').textContent = 'Network error';
+        document.getElementById('setPinError').style.display = 'block';
+      }
+    }
+
+    // ============================
+    // Show unlocked state
+    // ============================
+    async function showUnlocked(username, confidence) {
+      document.getElementById('lockedView').style.display = 'none';
+      document.getElementById('unlockedView').style.display = 'block';
+      document.getElementById('welcomeUser').textContent = username || 'User';
+
+      if (username) {
+        document.getElementById('myDashboardBtn').href = `/user/${username}/dashboard`;
+      }
+      if (confidence) {
+        document.getElementById('matchConfidence').textContent = (confidence * 100).toFixed(1) + '%';
+      }
+      try {
+        const res = await fetch('/api/users');
+        const data = await res.json();
+        document.getElementById('dashUserCount').textContent = `${data.count} / ${data.max}`;
+      } catch (e) { }
+
+      startSessionWatch();  // begin session timeout countdown
+    }
+
+    // ============================
+    // Lock system
+    // ============================
+    async function lockSystem() {
+      try {
+        await fetch('/api/lock', { method: 'POST' });
+        if (sessionTimer) { clearInterval(sessionTimer); sessionTimer = null; }
+        hideSessionBanner();
+        document.getElementById('unlockedView').style.display = 'none';
+        document.getElementById('lockedView').style.display = 'block';
+        document.getElementById('authVideoWrapper').style.display = 'none';
+        document.getElementById('authStatusBar').style.display = 'none';
+
+        resetAuthUI();
+        stopCamera();
+
+        showToast('System locked', 'info');
+      } catch (e) {
+        showToast('Error locking system', 'error');
+      }
+    }
+
+    // ============================
+    // Session Timeout
+    // ============================
+    let sessionTimer = null;
+    let sessionCountdownEl = null;
+
+    function startSessionWatch() {
+      if (sessionTimer) clearInterval(sessionTimer);
+      sessionTimer = setInterval(checkSession, 15000);
+    }
+
+    async function checkSession() {
+      try {
+        const res = await fetch('/api/session_status');
+        const d = await res.json();
+        if (d.timed_out) {
+          clearInterval(sessionTimer);
+          showToast(`Session timed out — system locked`, 'error');
+          document.getElementById('unlockedView').style.display = 'none';
+          document.getElementById('lockedView').style.display = 'block';
+
+          resetAuthUI();
+          return;
+        }
+        if (d.is_unlocked && d.remaining_s <= 60) {
+          showSessionBanner(d.remaining_s);
+        } else {
+          hideSessionBanner();
+        }
+      } catch (e) { }
+    }
+
+    function showSessionBanner(remaining) {
+      let banner = document.getElementById('sessionBanner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'sessionBanner';
+        banner.style.cssText = `
+          position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+          background:#b45309;color:#fff;padding:10px 22px;border-radius:10px;
+          font-size:0.82rem;font-weight:600;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.4);`;
+        document.body.appendChild(banner);
+      }
+      banner.textContent = `⏱ Session expires in ${remaining}s — click anywhere to extend`;
+      banner.style.display = 'block';
+    }
+
+    function hideSessionBanner() {
+      const b = document.getElementById('sessionBanner');
+      if (b) b.style.display = 'none';
+    }
+
+    // Extend session on any interaction
+    document.addEventListener('click', () => {
+      fetch('/api/session_keepalive', { method: 'POST' });
+      hideSessionBanner();
+    });
+    document.addEventListener('keydown', () => {
+      fetch('/api/session_keepalive', { method: 'POST' });
+    });
+
+    // ============================
+    // Post-lockout blink gate
+    // ============================
+    // When the server returns post_lockout_required, the user must blink
+    // before identity matching is attempted again.
+    // The blink challenge is already handled server-side by the existing
+    // BlinkChallenge module; we just surface the message here.
+    const origTryAuth = typeof tryAuth !== 'undefined' ? tryAuth : null;
+
+    function handlePostLockout(statusBar) {
+      statusBar.className = 'auth-status-bar scanning';
+      statusBar.innerHTML = `👁 <strong>Liveness Check Required</strong>
+        <span style="display:block;font-size:0.75rem;margin-top:3px;opacity:0.8;">
+          After a lockout, please blink twice to verify you're live before re-authenticating.
+        </span>`;
+    }
+
+    // ============================
+    // Init
+    // ============================
+    checkStatus();
+  </script>
+</body>
+
+</html>

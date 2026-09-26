@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login | FaceAuth</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --border: #30363d;
+            --text: #e6edf3;
+            --muted: #8b949e;
+            --blue: #58a6ff;
+            --red: #f85149;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            width: 360px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .logo h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--blue);
+        }
+
+        .logo p {
+            color: var(--muted);
+            font-size: 0.82rem;
+            margin-top: 4px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-bottom: 5px;
+            margin-top: 16px;
+        }
+
+        input {
+            width: 100%;
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: var(--text);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border .2s;
+        }
+
+        input:focus {
+            border-color: var(--blue);
+        }
+
+        .btn {
+            width: 100%;
+            margin-top: 24px;
+            padding: 12px;
+            background: var(--blue);
+            color: #0d1117;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: opacity .2s;
+        }
+
+        .btn:hover {
+            opacity: .85;
+        }
+
+        .error {
+            background: rgba(248, 81, 73, .12);
+            border: 1px solid rgba(248, 81, 73, .3);
+            color: var(--red);
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 0.82rem;
+            margin-top: 16px;
+        }
+
+        .back {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 0.78rem;
+            color: var(--muted);
+        }
+
+        .back a {
+            color: var(--blue);
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div class="logo">
+            <h1>⚙ Admin Login</h1>
+            <p>FaceAuth Analytics Dashboard</p>
+        </div>
+        {% if error %}
+        <div class="error">⚠ {{ error }}</div>
+        {% endif %}
+        <form method="POST">
+            <label>Username</label>
+            <input type="text" name="username" placeholder="admin" required autofocus />
+            <label>Password</label>
+            <input type="password" name="password" placeholder="••••••••" required />
+            <button type="submit" class="btn">Sign In</button>
+        </form>
+        <div class="back"><a href="/">← Back to Home</a></div>
+    </div>
+</body>
+
+</html>

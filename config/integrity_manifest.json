@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "generated_at": "2026-06-13T18:20:44.968618",
+  "file_count": 26,
+  "patterns": [
+    "checkpoints/**/*.pth",
+    "config/config_auth.yaml",
+    "src/models/*.py",
+    "src/auth/*.py",
+    "src/liveness/*.py",
+    "src/security/*.py",
+    "web_app.py"
+  ],
+  "hashes": {
+    "checkpoints/attention_cnn/best_model.pth": "bed1d68063964125eb372204ec3fca9d552fbb62adbddb412f3670c5a62258ac",
+    "checkpoints/cdcn/best_model.pth": "e057343138fb3b049dc2eaf9f8cbe87f63157a375f51074760973470087a92a0",
+    "checkpoints/cnn_vit/checkpoint_epoch_13.pth": "cd17c334abdbc449a87644e00d483eab114314d47c1d8b351f1d0734a5ee0c61",
+    "checkpoints/ensemble/best_model.pth": "11847c3273012d8a24a7e8fa633a995163c2bb575ce44e14e0af9139976a97e7",
+    "checkpoints/frequency_cnn/best_model.pth": "e532883e507c9cf5a5a94419f7b77a012f251fc5ce994568fd0f80504c832ef1",
+    "config/config_auth.yaml": "5802c9cbfd4ffb97caeffcc431405eacb519297e31fb4052cdc97ac660f2004f",
+    "src/auth/__init__.py": "0425a028758729cabaad815ba4b30c95f36933de218dcfb78a6c5c775c53ec5a",
+    "src/auth/attempt_logger.py": "f3e675f38285feca0ef8bf25b6b3064a7501bc403a93d43fe7f74798a39bf6fa",
+    "src/auth/authentication.py": "792af90b640edf41900eb79b7274e847970a3b286313d0de13ca262ec943a8da",
+    "src/auth/decision_engine.py": "8e5295c94faca470b712376f2954d20b38044f0d4a5b47fd9f84c9befe42aabb",
+    "src/auth/face_encoder.py": "2cd1a5ab16e26bc1689924169cf10ff618ef7de949099dc0f1abcb43123ce291",
+    "src/auth/identity_store.py": "bd9ab23d7d7b9464e2d6d84e3f6bcc9025137685f095f4b142ed10eab22cf36b",
+    "src/auth/ip_limiter.py": "01c772b0a85990190a54973908a7d3324a8ce43f7f0fabf611860daf4f5c9535",
+    "src/auth/pin_store.py": "234b97e0bc6e79f7851f90cde092763b1642cf9d146b18df71d3d447c24daa86",
+    "src/auth/registration.py": "253b46fe5d66a78798850df68d5c3469d6d4d480146ad9f00d8d42e2e2146a21",
+    "src/liveness/__init__.py": "9b0a4911605b4f1a08ad8ac2e398918ff1a9e26f609ad9ad2c4e7cf7eaced702",
+    "src/liveness/blink_detector.py": "a69401758c2855a615c951b5bed4b6c1bdfbfacaf291bdee5a980d2cba4a296c",
+    "src/models/__init__.py": "089e1c1c9333dd5de40c8350bdffdd04c7f3b1dba8315420371a904744e435e6",
+    "src/models/attention_cnn.py": "7c5a9e39fea8a1d26bf66358e7561c4f7e62c5450b31676bb46e23172c2e2217",
+    "src/models/cdcn.py": "1724c30ae7b678cf2a1c32d6bbf804bc9d9daa0d6f3422a97ed91478335ffe8d",
+    "src/models/cnn_vit.py": "0f31eaeccc931e671734457c0c754d7871af88e63f4a0627117cc5dbfb7278eb",
+    "src/models/ensemble.py": "192d159c9759bb4bcec4a7fdf78824ab2414218b72ad6624f53667e3c9369af4",
+    "src/models/frequency_cnn.py": "a37043c9316cadd3fbac3c0e3e6a71f17edae014f7d0a6410bde8dd45fb7b4e9",
+    "src/security/__init__.py": "10a9d311181f5a6b583c81474dcaac0df35f0dfca455139b03a3f821bca5a854",
+    "src/security/integrity_checker.py": "5d79414879709ef1ce741ff9cdb87cf6b0979d0c462bbf051270468333257237",
+    "web_app.py": "30522f65666ac9583adc385871bf41d3b0e381e1b8c0744f4eaac39231d12848"
+  }
+}

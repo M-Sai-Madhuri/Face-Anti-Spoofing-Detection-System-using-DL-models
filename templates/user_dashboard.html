@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Dashboard | FaceAuth</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface2: #1c2333;
+            --border: #30363d;
+            --text: #e6edf3;
+            --muted: #8b949e;
+            --green: #3fb950;
+            --red: #f85149;
+            --yellow: #d29922;
+            --blue: #58a6ff;
+            --purple: #bc8cff;
+            --orange: #ffa657;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        header h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        header h1 span {
+            color: var(--blue);
+        }
+
+        .header-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 7px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            color: var(--text);
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: inherit;
+            transition: background .2s;
+        }
+
+        .btn:hover {
+            background: var(--border);
+        }
+
+        main {
+            padding: 24px 28px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Profile card (Unique to User view) */
+        .profile-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--blue), var(--purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .profile-info h2 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .profile-info p {
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+
+        /* Stat cards - Matching Admin */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+        }
+
+        .stat-card .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .stat-card .sub {
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        .c-green {
+            color: var(--green);
+        }
+
+        .c-red {
+            color: var(--red);
+        }
+
+        .c-blue {
+            color: var(--blue);
+        }
+
+        .c-yellow {
+            color: var(--yellow);
+        }
+
+        .c-purple {
+            color: var(--purple);
+        }
+
+        /* Charts row - Matching Admin */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+        }
+
+        .chart-card h3 {
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 200px;
+        }
+
+        /* Tables - Matching Admin */
+        .section-title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin-bottom: 12px;
+        }
+
+        .table-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        thead th {
+            color: var(--muted);
+            font-weight: 600;
+            text-align: left;
+            padding: 7px 10px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        tbody td {
+            padding: 9px 10px;
+            border-bottom: 1px solid rgba(48, 54, 61, .5);
+            vertical-align: middle;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover td {
+            background: rgba(255, 255, 255, .02);
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.68rem;
+            font-weight: 600;
+        }
+
+        .pill-green {
+            background: rgba(63, 185, 80, .15);
+            color: var(--green);
+        }
+
+        .pill-yellow {
+            background: rgba(210, 153, 34, .15);
+            color: var(--yellow);
+        }
+
+        .pill-red {
+            background: rgba(248, 81, 73, .15);
+            color: var(--red);
+        }
+
+        .pill-blue {
+            background: rgba(88, 166, 255, .12);
+            color: var(--blue);
+        }
+
+        .refresh-btn {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-family: inherit;
+        }
+
+        .error-msg {
+            background: rgba(248, 81, 73, .1);
+            border: 1px solid rgba(248, 81, 73, .3);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            color: var(--red);
+            margin-bottom: 20px;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.7rem;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        @media(max-width:700px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>📊 <span>My</span> Identity Dashboard</h1>
+        <div class="header-right">
+            <button class="refresh-btn" onclick="loadMetrics()">↻ Refresh</button>
+            <a href="/" class="btn">← Home</a>
+        </div>
+    </header>
+
+    <main>
+        {% if error %}
+        <div class="error-msg">⚠ {{ error }}</div>
+        {% else %}
+
+        <!-- Profile card -->
+        <div class="profile-card">
+            <div class="avatar">{{ username[0].upper() }}</div>
+            <div class="profile-info">
+                <h2>{{ username }}</h2>
+                <p>Authenticated FaceAuth User</p>
+                <div style="margin-top:10px; display:flex; gap:12px; flex-wrap:wrap">
+                    <span id="p-t-pill" class="pill pill-blue">Loading profile…</span>
+                    <span id="p-e-pill" class="pill pill-blue">— embeddings</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stat cards -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="label">Total Authentication Attempts</div>
+                <div class="value c-blue" id="s-total">—</div>
+                <div class="sub">personal history</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Access Granted</div>
+                <div class="value c-green" id="s-success">—</div>
+                <div class="sub" id="s-rate">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Spoof Attempts</div>
+                <div class="value c-yellow" id="s-spoof">—</div>
+                <div class="sub">liveness check fails</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Avg Match Confidence</div>
+                <div class="value c-purple" id="s-avg">—</div>
+                <div class="sub">identity similarity</div>
+            </div>
+        </div>
+
+        <!-- Charts row -->
+        <div class="chart-grid">
+            <div class="chart-card">
+                <h3>📊 Outcomes (Real vs Spoof)</h3>
+                <div class="chart-wrap"><canvas id="chart-outcome"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>🛡️ My Similarity Band</h3>
+                <div class="chart-wrap"><canvas id="chart-risk"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>📈 Identity Timeline (Confidence)</h3>
+                <div class="chart-wrap"><canvas id="chart-timeline"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Per-user table details (Personal View) -->
+        <div class="section-title">Identity Profile Details</div>
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                        <th>Comparison / Status</th>
+                    </tr>
+                </thead>
+                <tbody id="profile-details-tbody">
+                    <tr>
+                        <td>Adaptive Threshold</td>
+                        <td id="d-threshold">—</td>
+                        <td id="d-threshold-status">—</td>
+                    </tr>
+                    <tr>
+                        <td>Mean Embedding Similarity</td>
+                        <td id="d-mean">—</td>
+                        <td id="d-mean-status">Consistency rating</td>
+                    </tr>
+                    <tr>
+                        <td>Similarity Standard Deviation</td>
+                        <td id="d-std">—</td>
+                        <td id="d-std-status">Stability rating</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Auth history log -->
+        <div class="section-title">Personal Authentication Log (Last 20)</div>
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Spoof Check</th>
+                        <th>Identity Match</th>
+                        <th>Confidence</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="history-tbody">
+                    <tr>
+                        <td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">Loading entries…</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </main>
+
+    <footer>FaceAuth Personal Dashboard · Auto-refreshes on load · Protected Data Session</footer>
+
+    <script>
+        const username = "{{ username | escape }}";
+        let outcomeChart, riskChart, timelineChart;
+
+        function initCharts() {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded. Skipping charts.');
+                return;
+            }
+            try {
+                const def = { plugins: { legend: { labels: { color: '#8b949e', font: { size: 11, family: 'Inter' } } } } };
+
+                outcomeChart = new Chart(document.getElementById('chart-outcome').getContext('2d'), {
+                    type: 'doughnut',
+                    data: { labels: ['Real', 'Spoof'], datasets: [{ data: [0, 0], backgroundColor: ['#3fb950', '#d29922'], borderColor: '#161b22', borderWidth: 2 }] },
+                    options: { ...def, cutout: '65%', responsive: true, maintainAspectRatio: false }
+                });
+
+                riskChart = new Chart(document.getElementById('chart-risk').getContext('2d'), {
+                    type: 'bar',
+                    data: { labels: ['REAL (PASS)', 'CHALLENGE', 'SPOOF (FAIL)'], datasets: [{ data: [0, 0, 0], backgroundColor: ['#3fb950', '#d29922', '#f85149'], borderRadius: 6 }] },
+                    options: { ...def, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' } }, y: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' }, beginAtZero: true } } }
+                });
+
+                timelineChart = new Chart(document.getElementById('chart-timeline').getContext('2d'), {
+                    type: 'line',
+                    data: { labels: [], datasets: [{ label: 'Match Confidence', data: [], borderColor: '#58a6ff', backgroundColor: 'rgba(88,166,255,.1)', fill: true, tension: 0.3, pointRadius: 4 }] },
+                    options: { ...def, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8b949e', font: { size: 9 } }, grid: { color: '#30363d' } }, y: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' }, min: 0, max: 1 } } }
+                });
+            } catch (e) { console.error('Chart init error:', e); }
+        }
+
+        function getSecurityLabel(t) {
+            if (t == null) return 'Global (0.85)';
+            if (t >= 0.87) return 'Strict (Highly Consistent)';
+            if (t >= 0.82) return 'Standard (Balanced)';
+            return 'Relaxed (Capture Variation)';
+        }
+
+        async function loadMetrics() {
+            try {
+                const res = await fetch(`/api/user/${username}/metrics`);
+                if (res.status === 401 || res.status === 403) { window.location = '/'; return; }
+                if (!res.ok) throw new Error(`API Error: ${res.status} ${res.statusText}`);
+                const d = await res.json();
+                if (d.error) throw new Error(d.error);
+
+                // Profile
+                const t = d.adaptive_threshold;
+                document.getElementById('p-t-pill').textContent = t ? `Adaptive: ${t.toFixed(4)}` : 'Global Threshold';
+                document.getElementById('p-e-pill').textContent = `${d.embedding_count || 0} Registered Embeddings`;
+
+                // Stat cards
+                document.getElementById('s-total').textContent = d.user_attempts;
+                document.getElementById('s-success').textContent = d.user_successes;
+                document.getElementById('s-rate').textContent = `${d.user_success_rate}% Success Rate`;
+
+                const spoofCount = (d.recent_history || []).filter(r => r.spoof_label === 'SPOOF').length;
+                document.getElementById('s-spoof').textContent = spoofCount;
+                document.getElementById('s-avg').textContent = d.avg_confidence > 0 ? (d.avg_confidence * 100).toFixed(1) + '%' : '—';
+
+                // Details Table
+                document.getElementById('d-threshold').textContent = t ? t.toFixed(4) : '0.8500';
+                document.getElementById('d-threshold-status').textContent = getSecurityLabel(t);
+                document.getElementById('d-mean').textContent = (d.stats?.mean_similarity != null) ? d.stats.mean_similarity.toFixed(4) : '—';
+                document.getElementById('d-std').textContent = (d.stats?.std_similarity != null) ? d.stats.std_similarity.toFixed(4) : '—';
+
+                // Charts
+                if (outcomeChart) {
+                    outcomeChart.data.datasets[0].data = [d.user_attempts - spoofCount, spoofCount];
+                    outcomeChart.update();
+                }
+                if (riskChart && d.risk_distribution) {
+                    const rd = d.risk_distribution;
+                    riskChart.data.datasets[0].data = [rd.PASS || 0, rd.CHALLENGE || 0, rd.FAIL || 0];
+                    riskChart.update();
+                }
+                if (timelineChart && d.recent_history) {
+                    const hist = d.recent_history.slice(-15);
+                    timelineChart.data.labels = hist.map((_, i) => `#${i + 1}`);
+                    timelineChart.data.datasets[0].data = hist.map(r => r.identity_confidence);
+                    timelineChart.update();
+                }
+
+                // Log table
+                const tbody = document.getElementById('history-tbody');
+                const logs = d.recent_history || [];
+                if (!logs.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px;">No session data found</td></tr>';
+                } else {
+                    tbody.innerHTML = [...logs].reverse().map(r => {
+                        const match = r._match;
+                        const label = r.spoof_label === 'SPOOF' ? `<span class="pill pill-red">SPOOF</span>` : `<span class="pill pill-green">REAL</span>`;
+                        const status = match ? `<span class="pill pill-green">GRANTED</span>` : (r.spoof_label === 'SPOOF' ? `<span class="pill pill-yellow">BLOCKED</span>` : `<span class="pill pill-red">DENIED</span>`);
+                        const conf = parseFloat(r.identity_confidence) || 0;
+                        return `<tr>
+                            <td style="color:var(--muted);font-size:0.72rem;">${r.timestamp}</td>
+                            <td>${label}</td>
+                            <td>${match ? 'MATCH' : 'NO MATCH'}</td>
+                            <td>${conf > 0 ? (conf * 100).toFixed(1) + '%' : '—'}</td>
+                            <td>${status}</td>
+                        </tr>`;
+                    }).join('');
+                }
+
+            } catch (e) {
+                console.error('Metrics fetch error:', e);
+                const main = document.querySelector('main');
+                const errDiv = document.createElement('div');
+                errDiv.className = 'error-msg';
+                errDiv.innerHTML = `⚠️ <b>Data Loading Failed:</b> ${e.message}<br><small>Try restarting the server or checking the CSV log.</small>`;
+                main.insertBefore(errDiv, main.firstChild);
+            }
+        }
+
+        {% if not error %}
+        initCharts();
+        loadMetrics();
+        {% endif %}
+    </script>
+</body>
+
+</html>

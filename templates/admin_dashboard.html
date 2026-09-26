@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard | FaceAuth</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface2: #1c2333;
+            --border: #30363d;
+            --text: #e6edf3;
+            --muted: #8b949e;
+            --green: #3fb950;
+            --red: #f85149;
+            --yellow: #d29922;
+            --blue: #58a6ff;
+            --purple: #bc8cff;
+            --orange: #ffa657;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        header h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        header h1 span {
+            color: var(--blue);
+        }
+
+        .header-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 7px 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--surface2);
+            color: var(--text);
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: inherit;
+            transition: background .2s;
+        }
+
+        .btn:hover {
+            background: var(--border);
+        }
+
+        .btn-danger {
+            border-color: rgba(248, 81, 73, .4);
+            color: var(--red);
+        }
+
+        main {
+            padding: 24px 28px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Stat cards */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+        }
+
+        .stat-card .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .stat-card .sub {
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        .c-green {
+            color: var(--green);
+        }
+
+        .c-red {
+            color: var(--red);
+        }
+
+        .c-blue {
+            color: var(--blue);
+        }
+
+        .c-yellow {
+            color: var(--yellow);
+        }
+
+        .c-purple {
+            color: var(--purple);
+        }
+
+        /* Charts */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+        }
+
+        .chart-card h3 {
+            font-size: 0.82rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .chart-wrap {
+            position: relative;
+            height: 200px;
+        }
+
+        /* A/B section */
+        .ab-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .ab-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+        }
+
+        .ab-card .title {
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .ab-card .big {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        /* User table */
+        .section-title {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin-bottom: 12px;
+        }
+
+        .table-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        thead th {
+            color: var(--muted);
+            font-weight: 600;
+            text-align: left;
+            padding: 7px 10px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        tbody td {
+            padding: 9px 10px;
+            border-bottom: 1px solid rgba(48, 54, 61, .5);
+            vertical-align: middle;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover td {
+            background: rgba(255, 255, 255, .02);
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.68rem;
+            font-weight: 600;
+        }
+
+        .pill-green {
+            background: rgba(63, 185, 80, .15);
+            color: var(--green);
+        }
+
+        .pill-yellow {
+            background: rgba(210, 153, 34, .15);
+            color: var(--yellow);
+        }
+
+        .pill-red {
+            background: rgba(248, 81, 73, .15);
+            color: var(--red);
+        }
+
+        .pill-blue {
+            background: rgba(88, 166, 255, .12);
+            color: var(--blue);
+        }
+
+        .bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bar {
+            flex: 1;
+            height: 5px;
+            background: var(--surface2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--blue), var(--purple));
+        }
+
+        .refresh-btn {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-family: inherit;
+        }
+
+        .user-link {
+            color: var(--blue);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .user-link:hover {
+            text-decoration: underline;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.7rem;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        @media(max-width:900px) {
+
+            .chart-grid,
+            .ab-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>⚙ <span>FaceAuth</span> Admin Dashboard</h1>
+        <div class="header-right">
+            <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+            <a href="/admin/logout" class="btn btn-danger">Logout</a>
+            <a href="/" class="btn">← Home</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Stat cards -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="label">Total Attempts</div>
+                <div class="value c-blue" id="s-total">—</div>
+                <div class="sub">all time</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Access Granted</div>
+                <div class="value c-green" id="s-success">—</div>
+                <div class="sub" id="s-sr">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Denied</div>
+                <div class="value c-red" id="s-fail">—</div>
+                <div class="sub">not matched</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Spoof Blocked</div>
+                <div class="value c-yellow" id="s-spoof">—</div>
+                <div class="sub" id="s-spr">—</div>
+            </div>
+            <div class="stat-card">
+                <div class="label">Registered Users</div>
+                <div class="value c-purple" id="s-users">—</div>
+                <div class="sub">in identity store</div>
+            </div>
+        </div>
+
+        <!-- Charts row -->
+        <div class="chart-grid">
+            <div class="chart-card">
+                <h3>📊 Outcome Distribution</h3>
+                <div class="chart-wrap"><canvas id="chart-outcome"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>🛡️ Risk Band Distribution</h3>
+                <div class="chart-wrap"><canvas id="chart-risk"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <h3>📈 Recent Attempt Timeline</h3>
+                <div class="chart-wrap"><canvas id="chart-timeline"></canvas></div>
+            </div>
+        </div>
+
+
+
+        <!-- Per-user table -->
+        <div class="section-title">Per-User Identity Profile (Full Admin View)</div>
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Embeddings</th>
+                        <th>Adaptive Threshold</th>
+                        <th>Global (0.85)</th>
+                        <th>Avg Auth Sim</th>
+                        <th>Mean Embed Sim</th>
+                        <th>Std</th>
+                        <th>Security</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="user-tbody">
+                    <tr>
+                        <td colspan="9" style="text-align:center;color:var(--muted);padding:20px;">Loading…</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- All attempts log -->
+        <div class="section-title">Recent Authentication Log</div>
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Spoof Label</th>
+                        <th>Identity Match</th>
+                        <th>Confidence</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="log-tbody">
+                    <tr>
+                        <td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">Loading…</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- IP Rate Limit Management -->
+        <div class="section-title">🔒 IP Rate Limit Management</div>
+        <div class="table-card" id="ip-panel">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <div id="ip-stats" style="font-size:0.78rem;color:var(--muted)">Loading IP stats…</div>
+                <button class="btn btn-danger" onclick="resetAllBlocks()" style="font-size:0.75rem;padding:5px 12px">⚑
+                    Unblock All IPs</button>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>IP Address</th>
+                        <th>Blocked Since</th>
+                        <th>Time Remaining</th>
+                        <th>Reason</th>
+                        <th>Recent Fails</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="ip-tbody">
+                    <tr>
+                        <td colspan="6" style="text-align:center;color:var(--muted);padding:14px">No blocked IPs</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 2FA PIN Management -->
+        <div class="section-title">🔑 2FA PIN Management (Per-User)</div>
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>PIN Set?</th>
+                        <th>Admin Action</th>
+                    </tr>
+                </thead>
+                <tbody id="pin-tbody">
+                    <tr>
+                        <td colspan="3" style="text-align:center;color:var(--muted);padding:14px">Loading…</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        </div>
+
+        <!-- Security Policy Configuration -->
+        <div class="section-title">🛡️ Security Policy Configuration</div>
+        <div class="table-card" style="padding: 24px;">
+            <form id="policy-form" onsubmit="event.preventDefault(); savePolicy();">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; text-align: left; margin-bottom: 20px;">
+                    
+                    <!-- Core thresholds -->
+                    <div style="background: var(--surface2); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                        <h4 style="margin-bottom: 12px; color: var(--blue); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Core Thresholds</h4>
+                        
+                        <div style="margin-bottom: 12px;">
+                            <label style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); margin-bottom: 6px;">
+                                <span>Spoof Threshold</span>
+                                <span style="font-weight: 600; color: var(--text);" id="v-spoof-threshold">0.60</span>
+                            </label>
+                            <input type="range" id="p-spoof-threshold" min="0.1" max="0.9" step="0.05" style="width: 100%; accent-color: var(--blue);" oninput="document.getElementById('v-spoof-threshold').textContent = parseFloat(this.value).toFixed(2)">
+                        </div>
+                        
+                        <div style="margin-bottom: 12px;">
+                            <label style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); margin-bottom: 6px;">
+                                <span>Identity Match Threshold</span>
+                                <span style="font-weight: 600; color: var(--text);" id="v-identity-threshold">0.85</span>
+                            </label>
+                            <input type="range" id="p-identity-threshold" min="0.5" max="0.95" step="0.05" style="width: 100%; accent-color: var(--blue);" oninput="document.getElementById('v-identity-threshold').textContent = parseFloat(this.value).toFixed(2)">
+                        </div>
+
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border);">
+                            <label style="font-size: 0.75rem; color: var(--muted); cursor: pointer;" for="p-adaptive-identity">Adaptive Identity Threshold</label>
+                            <input type="checkbox" id="p-adaptive-identity" style="cursor: pointer; width: 15px; height: 15px; accent-color: var(--blue);">
+                        </div>
+                    </div>
+
+                    <!-- Risk Engine Settings -->
+                    <div style="background: var(--surface2); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                        <h4 style="margin-bottom: 12px; color: var(--yellow); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Risk Decision Engine</h4>
+                        
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px dashed var(--border);">
+                            <label style="font-size: 0.75rem; color: var(--muted); cursor: pointer;" for="p-risk-enabled">Enable Risk Engine</label>
+                            <input type="checkbox" id="p-risk-enabled" style="cursor: pointer; width: 15px; height: 15px; accent-color: var(--yellow);">
+                        </div>
+
+                        <div style="margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <label style="display: block; font-size: 0.7rem; color: var(--muted); margin-bottom: 4px;">Spoof Weight</label>
+                                <input type="number" id="p-weight-spoof" step="0.05" min="0" max="1" style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.78rem;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.7rem; color: var(--muted); margin-bottom: 4px;">Stability Weight</label>
+                                <input type="number" id="p-weight-stability" step="0.05" min="0" max="1" style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.78rem;">
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                            <div>
+                                <label style="display: block; font-size: 0.7rem; color: var(--muted); margin-bottom: 4px;">Pass Threshold</label>
+                                <input type="number" id="p-thresh-pass" step="0.05" min="0" max="1" style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.78rem;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.7rem; color: var(--muted); margin-bottom: 4px;">Challenge Thresh</label>
+                                <input type="number" id="p-thresh-challenge" step="0.05" min="0" max="1" style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.78rem;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Policies & Lockouts -->
+                    <div style="background: var(--surface2); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+                        <h4 style="margin-bottom: 12px; color: var(--red); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Lockout & Session Settings</h4>
+                        
+                        <div style="margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <label style="display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 4px;">Max Fail Limits</label>
+                                <input type="number" id="p-lockout-limit" style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.78rem;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 4px;">Lockout Cooldown (s)</label>
+                                <input type="number" id="p-lockout-duration" style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.78rem;">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div>
+                                <label style="display: block; font-size: 0.75rem; color: var(--muted); margin-bottom: 4px;">Session Timeout (s)</label>
+                                <input type="number" id="p-session-timeout" style="width: 100%; padding: 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.78rem;">
+                            </div>
+                            <div style="display: flex; flex-direction: column; justify-content: flex-end;">
+                                <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 4px;">
+                                    <label style="font-size: 0.75rem; color: var(--muted); cursor: pointer;" for="p-temporal-enabled">Temporal Gate</label>
+                                    <input type="checkbox" id="p-temporal-enabled" style="cursor: pointer; width: 14px; height: 14px; accent-color: var(--red);">
+                                </div>
+                                <div style="display: flex; align-items: center; justify-content: space-between; padding-bottom: 4px; margin-top: 6px;">
+                                    <label style="font-size: 0.75rem; color: var(--muted); cursor: pointer;" for="p-pin-enabled">2FA PIN Gate</label>
+                                    <input type="checkbox" id="p-pin-enabled" style="cursor: pointer; width: 14px; height: 14px; accent-color: var(--red);">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div style="text-align: right; border-top: 1px solid var(--border); padding-top: 16px;">
+                    <button type="submit" class="btn" style="background: var(--green); color: white; border: none; font-size: 0.8rem; font-weight: 600; padding: 8px 22px; border-radius: 8px;">💾 Save Policy Settings</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Data Export -->
+        <div class="section-title">📦 Data Management</div>
+        <div class="table-card" style="padding:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+            <a href="/api/admin/export_identities" class="btn" style="font-size:0.8rem">⬇ Export Identity Store
+                (.enc)</a>
+            <a href="/api/admin/export_log" class="btn" style="font-size:0.8rem">⬇ Export Auth Log (.csv)</a>
+            <span style="font-size:0.75rem;color:var(--muted)">Downloads encrypted identity backup or plain CSV attempt
+                log</span>
+        </div>
+
+        <!-- Live Event Feed (SSE) -->
+        <div class="section-title">📡 Live Auth Feed</div>
+        <div class="table-card" id="live-feed-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                <div id="sse-status" style="font-size:0.75rem;color:var(--muted)">Connecting…</div>
+                <button class="btn" style="font-size:0.72rem;padding:3px 10px" onclick="clearFeed()">Clear</button>
+            </div>
+            <div id="live-feed"
+                style="max-height:260px;overflow-y:auto;font-size:0.78rem;display:flex;flex-direction:column;gap:5px">
+                <div style="color:var(--muted);text-align:center;padding:12px">Waiting for events…</div>
+            </div>
+        </div>
+
+    </main>
+    <footer>FaceAuth Admin · Auto-refreshes every 20s · <a href="/admin/logout" style="color:var(--muted);">Logout</a>
+    </footer>
+
+    <script>
+        let outcomeChart, riskChart, timelineChart;
+        const GLOBAL_T = 0.85;
+
+        function initCharts() {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded. Skipping charts.');
+                return;
+            }
+            try {
+                const def = { plugins: { legend: { labels: { color: '#8b949e', font: { size: 11, family: 'Inter' } } } } };
+                const outCtx = document.getElementById('chart-outcome');
+                if (outCtx) {
+                    outcomeChart = new Chart(outCtx.getContext('2d'), {
+                        type: 'doughnut',
+                        data: { labels: ['Granted', 'Spoof', 'Denied'], datasets: [{ data: [0, 0, 0], backgroundColor: ['#3fb950', '#d29922', '#f85149'], borderColor: '#161b22', borderWidth: 2 }] },
+                        options: { ...def, cutout: '60%', responsive: true, maintainAspectRatio: false }
+                    });
+                }
+                const riskCtx = document.getElementById('chart-risk');
+                if (riskCtx) {
+                    riskChart = new Chart(riskCtx.getContext('2d'), {
+                        type: 'bar',
+                        data: { labels: ['PASS', 'CHALLENGE', 'FAIL'], datasets: [{ data: [0, 0, 0], backgroundColor: ['#3fb950', '#d29922', '#f85149'], borderRadius: 6 }] },
+                        options: { ...def, responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' } }, y: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' }, beginAtZero: true } } }
+                    });
+                }
+                const timeCtx = document.getElementById('chart-timeline');
+                if (timeCtx) {
+                    timelineChart = new Chart(timeCtx.getContext('2d'), {
+                        type: 'bar',
+                        data: { labels: [], datasets: [{ label: 'Granted', data: [], backgroundColor: '#3fb950', borderRadius: 4 }, { label: 'Denied', data: [], backgroundColor: '#f85149', borderRadius: 4 }] },
+                        options: { ...def, responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: '#8b949e', font: { size: 9 } }, grid: { color: '#30363d' } }, y: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' }, beginAtZero: true } } }
+                    });
+                }
+            } catch (e) { console.error('Admin chart init error:', e); }
+        }
+
+        function sec(profile) {
+            if (profile === null || profile === undefined) return `<span class="pill pill-yellow">Global</span>`;
+            if (profile >= 0.87) return `<span class="pill pill-red">Strict</span>`;
+            if (profile >= 0.82) return `<span class="pill pill-green">Standard</span>`;
+            return `<span class="pill pill-yellow">Relaxed</span>`;
+        }
+
+        async function resetUserPIN(username) {
+            if (!confirm(`Are you sure you want to clear the 2FA PIN for ${username}?`)) return;
+            try {
+                // Not yet implemented on backend, but leaving hook
+                alert(`Cannot clear PIN for ${username} - API not yet implemented.`);
+            } catch (e) {
+                console.error('Reset PIN error:', e);
+            }
+        }
+
+        async function loadAll() {
+            try {
+                const res = await fetch('/api/admin/metrics');
+                if (res.status === 403) { window.location = '/admin/login'; return; }
+                const d = await res.json();
+
+                // Stats
+                document.getElementById('s-total').textContent = d.total_attempts;
+                document.getElementById('s-success').textContent = d.success_count;
+                document.getElementById('s-sr').textContent = d.success_rate + '% success';
+                document.getElementById('s-fail').textContent = Math.max(0, d.fail_count - d.spoof_count);
+                document.getElementById('s-spoof').textContent = d.spoof_count;
+                document.getElementById('s-spr').textContent = d.spoof_rate + '% of total';
+                document.getElementById('s-users').textContent = d.registered_users.length;
+
+
+                // Charts update
+                const nd = Math.max(0, d.fail_count - d.spoof_count);
+                if (outcomeChart) {
+                    outcomeChart.data.datasets[0].data = [d.success_count, d.spoof_count, nd];
+                    outcomeChart.update();
+                }
+                if (riskChart) {
+                    const rd = d.risk_distribution || {};
+                    riskChart.data.datasets[0].data = [rd.PASS || 0, rd.CHALLENGE || 0, rd.FAIL || 0];
+                    riskChart.update();
+                }
+
+                // Timeline update
+                if (timelineChart) {
+                    const recent = (d.recent_attempts || []).slice(-15);
+                    timelineChart.data.labels = recent.map((_, i) => `#${i + 1}`);
+                    timelineChart.data.datasets[0].data = recent.map(r => r._match ? 1 : 0);
+                    timelineChart.data.datasets[1].data = recent.map(r => r._match ? 0 : 1);
+                    timelineChart.update();
+                }
+
+                // Per-user table + PIN status
+                const users = d.per_user_thresholds || {};
+                const names = Object.keys(users);
+                const tbody = document.getElementById('user-tbody');
+                const pinTbody = document.getElementById('pin-tbody');
+
+                if (!names.length) {
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px;">No registered users</td></tr>';
+                    pinTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px;">No registered users</td></tr>';
+                }
+                else {
+                    tbody.innerHTML = names.map(u => {
+                        const info = users[u];
+                        const t = info.adaptive_threshold;
+                        const pct = t ? Math.max(0, Math.min(100, (t - 0.75) / 0.15 * 100)).toFixed(0) : 50;
+                        return `<tr>
+          <td><a class="user-link" href="/user/${u}/dashboard">${u}</a></td>
+          <td>${info.embedding_count}</td>
+          <td><div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:${pct}%"></div></div><span>${t != null ? t.toFixed(4) : '—'}</span></div></td>
+          <td style="color:var(--muted)">${GLOBAL_T.toFixed(4)}</td>
+          <td>${info.avg_similarity != null ? info.avg_similarity.toFixed(4) : '—'}</td>
+          <td>${info.stats?.mean_similarity != null ? info.stats.mean_similarity.toFixed(4) : '—'}</td>
+          <td>${info.stats?.std_similarity != null ? info.stats.std_similarity.toFixed(4) : '—'}</td>
+          <td>${sec(t)}</td>
+          <td><a class="btn" href="/user/${u}/dashboard" style="font-size:0.72rem;padding:3px 10px;">View</a></td>
+        </tr>`;
+                    }).join('');
+
+                    pinTbody.innerHTML = names.map(u => {
+                        const info = users[u];
+                        const hasPin = info.has_pin;
+                        return `<tr>
+          <td><a class="user-link" href="/user/${u}/dashboard">${u}</a></td>
+          <td>${hasPin ? '<span class="pill pill-green">Yes</span>' : '<span class="pill pill-red">No</span>'}</td>
+          <td><button class="btn btn-secondary" style="font-size:0.72rem;padding:3px 10px;" onclick="resetUserPIN('${u}')">Clear PIN</button></td>
+        </tr>`;
+                    }).join('');
+                }
+
+                // Attempt log
+                const logTbody = document.getElementById('log-tbody');
+                const logs = d.recent_attempts || [];
+                if (!logs.length) { logTbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">No attempts logged</td></tr>'; }
+                else {
+                    logTbody.innerHTML = [...logs].reverse().map(r => {
+                        const match = r._match;
+                        const label = r.spoof_label === 'SPOOF' ? `<span class="pill pill-red">SPOOF</span>` : `<span class="pill pill-green">REAL</span>`;
+                        const status = match ? `<span class="pill pill-green">GRANTED</span>` : (r.spoof_label === 'SPOOF' ? `<span class="pill pill-yellow">SPOOF BLOCK</span>` : `<span class="pill pill-red">DENIED</span>`);
+                        const conf = parseFloat(r.identity_confidence) || 0;
+                        return `<tr>
+          <td style="color:var(--muted);font-size:0.72rem;">${r.timestamp}</td>
+          <td>${label}</td>
+          <td>${match ? '<span class="pill pill-green">MATCH</span>' : '<span class="pill pill-red">NO MATCH</span>'}</td>
+          <td>${conf > 0 ? (conf * 100).toFixed(1) + '%' : '—'}</td>
+          <td>${status}</td>
+        </tr>`;
+                    }).join('');
+                }
+            } catch (e) { console.error(e); }
+            await loadBlockedIPs();
+            if (typeof loadPINStatus === 'function') {
+                const users = d ? Object.keys(d.per_user_thresholds || {}) : [];
+                await loadPINStatus(users);
+            }
+        }
+
+        async function loadBlockedIPs() {
+            try {
+                const res = await fetch('/api/admin/blocked_ips');
+                if (res.status === 403) return;
+                const d = await res.json();
+                const stats = d.stats || {};
+                document.getElementById('ip-stats').textContent =
+                    `Tracked IPs: ${stats.tracked_ips || 0} | Blocked: ${stats.blocked_ips || 0} | Max fails: ${stats.max_fails || 5} per ${stats.window_s || 60}s`;
+                const tbody = document.getElementById('ip-tbody');
+                const blocked = d.blocked_ips || [];
+                if (!blocked.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:14px">No blocked IPs</td></tr>';
+                } else {
+                    tbody.innerHTML = blocked.map(b => {
+                        const t = b.remaining_s > 0 ? `${b.remaining_s}s` : 'Permanent';
+                        const since = new Date(b.blocked_at * 1000).toLocaleTimeString();
+                        return `<tr>
+                  <td style="font-family:monospace;font-size:0.82rem">${b.ip}</td>
+                  <td style="color:var(--muted);font-size:0.78rem">${since}</td>
+                  <td><span class="pill pill-red">${t}</span></td>
+                  <td style="color:var(--muted);font-size:0.78rem">${b.reason}</td>
+                  <td>${b.fail_count}</td>
+                  <td><button class="btn" style="font-size:0.72rem;padding:3px 10px" onclick="unblockIP('${b.ip}')">Unblock</button></td>
+                </tr>`;
+                    }).join('');
+                }
+            } catch (e) { console.error('IP load error', e); }
+        }
+
+        async function unblockIP(ip) {
+            if (!confirm(`Unblock IP: ${ip}?`)) return;
+            const r = await fetch('/api/admin/unblock_ip', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ip }) });
+            const d = await r.json();
+            alert(d.message);
+            loadBlockedIPs();
+        }
+
+        async function resetAllBlocks() {
+            if (!confirm('Unblock ALL blocked IPs?')) return;
+            const r = await fetch('/api/admin/reset_all_blocks', { method: 'POST' });
+            const d = await r.json();
+            alert(d.message);
+            loadBlockedIPs();
+        }
+
+        async function loadPINStatus(users) {
+            const tbody = document.getElementById('pin-tbody');
+            if (!users.length) { tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--muted);padding:14px">No registered users</td></tr>'; return; }
+            try {
+                const rows = await Promise.all(users.map(async u => {
+                    const r = await fetch(`/api/pin/status/${u}`);
+                    const d = await r.json();
+                    const badge = d.has_pin ? '<span class="pill pill-green">SET</span>' : '<span class="pill pill-yellow">NOT SET</span>';
+                    const actions = d.has_pin
+                        ? `<button class="btn btn-danger" style="font-size:0.72rem;padding:3px 10px" onclick="resetPIN('${u}')">Reset PIN</button>`
+                        : `<span style="color:var(--muted);font-size:0.78rem">User must set via unlock screen</span>`;
+                    return `<tr><td><a class="user-link" href="/user/${u}/dashboard">${u}</a></td><td>${badge}</td><td>${actions}</td></tr>`;
+                }));
+                tbody.innerHTML = rows.join('');
+            } catch (e) { tbody.innerHTML = '<tr><td colspan="3" style="color:var(--muted);text-align:center;padding:14px">Error loading PIN status</td></tr>'; }
+        }
+
+        async function resetPIN(username) {
+            if (!confirm(`Reset PIN for ${username}?`)) return;
+            const r = await fetch('/api/admin/reset_pin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username }) });
+            const d = await r.json();
+            alert(d.message);
+            loadAll();
+        }
+
+        // ——— Live SSE Feed ———
+        let _sseSource = null;
+
+        function initSSE() {
+            if (_sseSource) { _sseSource.close(); }
+            _sseSource = new EventSource('/api/events');
+            _sseSource.onopen = () => {
+                document.getElementById('sse-status').textContent = '🟢 Live — connected';
+                document.getElementById('sse-status').style.color = 'var(--green)';
+            };
+            _sseSource.onerror = () => {
+                document.getElementById('sse-status').textContent = '🔴 Disconnected — reconnecting…';
+                document.getElementById('sse-status').style.color = 'var(--red)';
+            };
+            _sseSource.onmessage = (e) => {
+                try {
+                    const ev = JSON.parse(e.data);
+                    if (ev.type === 'ping' || ev.type === 'connected') return;
+                    addFeedRow(ev);
+                } catch (err) { }
+            };
+        }
+
+        function addFeedRow(ev) {
+            const feed = document.getElementById('live-feed');
+            // Clear placeholder
+            if (feed.querySelector('[data-placeholder]')) feed.innerHTML = '';
+            const status = ev.status || ev.type || '?';
+            const colors = {
+                access_granted: 'var(--green)',
+                pending_pin: 'var(--blue)',
+                spoof_denied: 'var(--yellow)',
+                unauthorized: 'var(--red)',
+                ip_blocked: 'var(--red)',
+                locked_out: 'var(--orange)',
+                lock: 'var(--muted)',
+            };
+            const icons = {
+                access_granted: '✅', pending_pin: '🔑', spoof_denied: '⚠️',
+                unauthorized: '❌', ip_blocked: '🚫', locked_out: '🔒', lock: '🔒',
+            };
+            const row = document.createElement('div');
+            row.style.cssText = `display:flex;gap:10px;align-items:center;padding:5px 8px;background:var(--surface2);border-radius:6px;border-left:3px solid ${colors[status] || 'var(--border)'}`;
+            const t = new Date(ev.ts * 1000).toLocaleTimeString();
+            const conf = ev.confidence > 0 ? ` · ${(ev.confidence * 100).toFixed(1)}%` : '';
+            row.innerHTML = `
+              <span style="font-size:0.95rem">${icons[status] || 'ℹ️'}</span>
+              <span style="flex:1;color:${colors[status] || 'var(--text)'};font-weight:600">${status}</span>
+              <span style="color:var(--muted)">${ev.user || ev.reason || '—'}${conf}</span>
+              <span style="color:var(--muted);font-size:0.7rem">${t}</span>`;
+            feed.insertBefore(row, feed.firstChild);
+            // Keep max 50 rows
+            while (feed.children.length > 50) feed.removeChild(feed.lastChild);
+        }
+
+        function clearFeed() {
+            document.getElementById('live-feed').innerHTML =
+                '<div data-placeholder style="color:var(--muted);text-align:center;padding:12px">Feed cleared</div>';
+        }
+
+        let activePolicy = null;
+
+        async function loadPolicy() {
+            try {
+                const res = await fetch('/api/admin/policy');
+                const d = await res.json();
+                if (d.success) {
+                    activePolicy = d.policy;
+                    const auth = d.policy.auth || {};
+                    const sec = d.policy.security || {};
+                    
+                    // Core thresholds
+                    document.getElementById('p-spoof-threshold').value = auth.spoof_threshold ?? 0.6;
+                    document.getElementById('v-spoof-threshold').textContent = parseFloat(auth.spoof_threshold ?? 0.6).toFixed(2);
+                    document.getElementById('p-identity-threshold').value = auth.identity_threshold ?? 0.85;
+                    document.getElementById('v-identity-threshold').textContent = parseFloat(auth.identity_threshold ?? 0.85).toFixed(2);
+                    document.getElementById('p-adaptive-identity').checked = auth.adaptive_identity?.enabled ?? false;
+                    
+                    // Risk Engine
+                    document.getElementById('p-risk-enabled').checked = auth.risk_engine?.enabled ?? false;
+                    document.getElementById('p-weight-spoof').value = auth.risk_engine?.weights?.spoof ?? 0.5;
+                    document.getElementById('p-weight-stability').value = auth.risk_engine?.weights?.stability ?? 0.2;
+                    document.getElementById('p-thresh-pass').value = auth.risk_engine?.thresholds?.pass ?? 0.8;
+                    document.getElementById('p-thresh-challenge').value = auth.risk_engine?.thresholds?.challenge ?? 0.6;
+                    
+                    // Security & Lockouts
+                    document.getElementById('p-lockout-limit').value = auth.lockout_attempt_limit ?? 5;
+                    document.getElementById('p-lockout-duration').value = auth.lockout_duration ?? 3;
+                    document.getElementById('p-session-timeout').value = sec.session_timeout_s ?? 30;
+                    document.getElementById('p-temporal-enabled').checked = sec.temporal_consistency?.enabled ?? false;
+                    document.getElementById('p-pin-enabled').checked = sec.pin_2fa?.enabled ?? false;
+                }
+            } catch (e) {
+                console.error("Failed to load policy:", e);
+            }
+        }
+
+        async function savePolicy() {
+            if (!activePolicy) return;
+            
+            const updated = {
+                auth: {
+                    spoof_threshold: parseFloat(document.getElementById('p-spoof-threshold').value),
+                    identity_threshold: parseFloat(document.getElementById('p-identity-threshold').value),
+                    adaptive_identity: {
+                        enabled: document.getElementById('p-adaptive-identity').checked
+                    },
+                    risk_engine: {
+                        enabled: document.getElementById('p-risk-enabled').checked,
+                        weights: {
+                            spoof: parseFloat(document.getElementById('p-weight-spoof').value),
+                            stability: parseFloat(document.getElementById('p-weight-stability').value),
+                            brightness: 0.15,
+                            motion: 0.15
+                        },
+                        thresholds: {
+                            pass: parseFloat(document.getElementById('p-thresh-pass').value),
+                            challenge: parseFloat(document.getElementById('p-thresh-challenge').value)
+                        }
+                    },
+                    lockout_attempt_limit: parseInt(document.getElementById('p-lockout-limit').value),
+                    lockout_duration: parseInt(document.getElementById('p-lockout-duration').value)
+                },
+                security: {
+                    session_timeout_s: parseInt(document.getElementById('p-session-timeout').value),
+                    temporal_consistency: {
+                        enabled: document.getElementById('p-temporal-enabled').checked
+                    },
+                    pin_2fa: {
+                        enabled: document.getElementById('p-pin-enabled').checked
+                    }
+                }
+            };
+            
+            try {
+                const res = await fetch('/api/admin/policy/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updated)
+                });
+                const d = await res.json();
+                alert(d.message);
+                loadPolicy();
+                loadAll();
+            } catch (e) {
+                alert("Failed to save policy: " + e);
+            }
+        }
+
+        initCharts();
+        loadAll();
+        loadPolicy();
+        initSSE();
+        setInterval(loadAll, 20000);
+        setInterval(loadBlockedIPs, 10000);
+    </script>
+</body>
+
+</html>

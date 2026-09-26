@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Face Authentication System - Register faces for biometric unlock">
+  <title>Face Registration | FaceAuth</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Navigation -->
+    <nav class="nav">
+      <a href="/" class="nav-brand">
+        <span class="icon">🔐</span>
+        <span>FaceAuth</span>
+      </a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">Home</a>
+        <a href="/register" class="nav-link active">Registration</a>
+      </div>
+    </nav>
+
+    <!-- Page Header -->
+    <h1 class="page-title">Face Registration</h1>
+    <p class="page-subtitle">Register and manage faces for biometric authentication</p>
+
+    <!-- Main Grid -->
+    <div class="grid grid-2">
+      <!-- Left: Camera Feed -->
+      <div class="card">
+        <div class="card-header">
+          <h2>📷 Live Camera</h2>
+          <span class="badge badge-info">
+            <span class="live-dot" style="width:6px;height:6px;"></span>
+            LIVE
+          </span>
+        </div>
+        <div class="card-body">
+          <div class="video-wrapper">
+            <video id="regCam" autoplay playsinline style="width: 100%; border-radius: 8px; transform: scaleX(-1); background: #000;"></video>
+            <div class="video-overlay">
+              <div class="live-dot"></div>
+              <span class="live-text">Anti-Spoof Active</span>
+            </div>
+          </div>
+          <div id="progressContainer" style="display: none; margin-top: 15px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px; color: var(--text-secondary);">
+              <span>Capture Progress</span>
+              <span id="progressPercent">0%</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
+              <div id="progressBar" style="background: var(--blue, #58a6ff); width: 0%; height: 100%; transition: width 0.1s;"></div>
+            </div>
+          </div>
+
+          <!-- Add User Form -->
+          <div style="margin-top: var(--space-lg);">
+            <h3
+              style="font-size: 0.9rem; font-weight: 600; margin-bottom: var(--space-sm); color: var(--text-secondary);">
+              ADD NEW USER
+            </h3>
+            <div class="input-group" style="flex-direction: column; gap: var(--space-sm);">
+              <input type="text" id="usernameInput" class="input" placeholder="Enter name..." maxlength="30">
+              <input type="password" id="pinInput" class="input" placeholder="Enter 4-8 digit PIN..." maxlength="8"
+                onkeydown="if(event.key==='Enter') addUser()">
+              <button class="btn btn-success" id="addBtn" onclick="addUser()" style="width: 100%;">
+                ➕ Add User & PIN
+              </button>
+            </div>
+            <div id="addStatus" style="margin-top: var(--space-sm); font-size: 0.82rem;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: User Management -->
+      <div class="card">
+        <div class="card-header">
+          <h2>👥 Registered Users</h2>
+          <span class="badge badge-info" id="userCount">0 / 5</span>
+        </div>
+        <div class="card-body" id="userListContainer">
+          <div class="empty-state" id="emptyState">
+            <div class="icon">👤</div>
+            <p>No users registered yet</p>
+            <p style="font-size: 0.8rem; margin-top: 4px;">Add a user using the camera</p>
+          </div>
+          <table class="user-table" id="userTable" style="display: none;">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // ============================
+    // Toast notifications
+    // ============================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+      toast.innerHTML = `<span>${icons[type] || ''}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.animation = 'toast-out 0.3s ease-in forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // ============================
+    // Load user list
+    // ============================
+    async function loadUsers() {
+      try {
+        const res = await fetch('/api/users');
+        const data = await res.json();
+        const tbody = document.getElementById('userTableBody');
+        const table = document.getElementById('userTable');
+        const empty = document.getElementById('emptyState');
+        const count = document.getElementById('userCount');
+
+        count.textContent = `${data.count} / ${data.max}`;
+
+        if (data.users.length === 0) {
+          table.style.display = 'none';
+          empty.style.display = 'block';
+          return;
+        }
+
+        table.style.display = 'table';
+        empty.style.display = 'none';
+
+        tbody.innerHTML = data.users.map((user, i) => {
+          const initial = user.charAt(0).toUpperCase();
+          const colors = ['#4e8eff', '#00d4ff', '#b388ff', '#00e676', '#ffab40'];
+          const color = colors[i % colors.length];
+          return `
+            <tr class="fade-in">
+              <td>
+                <span class="user-avatar" style="background: ${color};">${initial}</span>
+                <span id="name-${i}">${user}</span>
+              </td>
+              <td>
+                <div class="user-actions">
+                  <button class="btn btn-ghost btn-sm" onclick="startRename('${user}', ${i})" title="Rename">
+                    ✏️
+                  </button>
+                  <button class="btn btn-danger btn-sm" onclick="removeUser('${user}')" title="Remove">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (e) {
+        console.error('Failed to load users:', e);
+      }
+    }
+
+    // ============================
+    // Add user
+    // ============================
+    let regStream = null;
+
+    async function startCamera() {
+      try {
+        regStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' }
+        });
+        document.getElementById('regCam').srcObject = regStream;
+      } catch (err) {
+        console.error(err);
+        showToast('Could not access camera for registration.', 'error');
+      }
+    }
+
+    async function addUser() {
+      const nameInput = document.getElementById('usernameInput');
+      const pinInput = document.getElementById('pinInput');
+      const btn = document.getElementById('addBtn');
+      const status = document.getElementById('addStatus');
+
+      const name = nameInput.value.trim();
+      const pin = pinInput ? pinInput.value.trim() : '';
+
+      if (!name) {
+        showToast('Please enter a name', 'error');
+        nameInput.focus();
+        return;
+      }
+
+      if (!pin || !/^\d{4,8}$/.test(pin)) {
+        showToast('Please enter a 4-8 digit PIN', 'error');
+        if (pinInput) pinInput.focus();
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> Capturing...';
+      status.innerHTML = '<span style="color: var(--accent-blue);">📸 Look at the camera — capturing face...</span>';
+
+      // Capture 15 frames locally
+      const totalFrames = 15;
+      const frames = [];
+      const interval = 200; // ms
+      const canvas = document.createElement('canvas');
+      canvas.width = 640;
+      canvas.height = 480;
+      const ctx = canvas.getContext('2d');
+      const video = document.getElementById('regCam');
+      
+      document.getElementById('progressContainer').style.display = 'block';
+      document.getElementById('progressBar').style.width = '0%';
+      document.getElementById('progressPercent').textContent = '0%';
+
+      let currentFrame = 0;
+
+      async function captureNext() {
+        if (currentFrame >= totalFrames) {
+          // Upload captured frames
+          status.innerHTML = '<span style="color: var(--accent-blue);">⚙️ Processing & verifying liveness...</span>';
+          try {
+            const res = await fetch('/api/users/add', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: name, pin: pin, images: frames }),
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              showToast(`Registered: ${name}`, 'success');
+              status.innerHTML = `<span style="color: var(--accent-green);">✅ ${data.message}</span>`;
+              nameInput.value = '';
+              if (pinInput) pinInput.value = '';
+              loadUsers();
+            } else {
+              showToast(data.message, 'error');
+              status.innerHTML = `<span style="color: var(--accent-red);">❌ ${data.message}</span>`;
+            }
+          } catch (e) {
+            showToast('Network error', 'error');
+            status.innerHTML = '<span style="color: var(--accent-red);">❌ Network error</span>';
+          } finally {
+            btn.disabled = false;
+            btn.innerHTML = '➕ Add User & PIN';
+            document.getElementById('progressContainer').style.display = 'none';
+          }
+          return;
+        }
+
+        try {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          frames.push(dataUrl);
+        } catch (e) {
+          console.error(e);
+        }
+
+        currentFrame++;
+        const pct = Math.round((currentFrame / totalFrames) * 100);
+        document.getElementById('progressBar').style.width = pct + '%';
+        document.getElementById('progressPercent').textContent = pct + '%';
+        status.innerHTML = `<span style="color: var(--accent-blue);">📸 Capturing face... ${currentFrame}/${totalFrames}</span>`;
+
+        setTimeout(captureNext, interval);
+      }
+
+      captureNext();
+    }
+
+    // ============================
+    // Remove user
+    // ============================
+    async function removeUser(username) {
+      if (!confirm(`Remove user "${username}"?`)) return;
+
+      try {
+        const res = await fetch('/api/users/remove', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showToast(`Removed: ${username}`, 'success');
+        } else {
+          showToast(data.message, 'error');
+        }
+        loadUsers();
+      } catch (e) {
+        showToast('Network error', 'error');
+      }
+    }
+
+    // ============================
+    // Rename user
+    // ============================
+    function startRename(oldName, index) {
+      const nameSpan = document.getElementById(`name-${index}`);
+      const current = nameSpan.textContent;
+      nameSpan.innerHTML = `
+        <input type="text" class="rename-input" id="rename-input-${index}"
+               value="${current}" maxlength="30"
+               onkeydown="if(event.key==='Enter') confirmRename('${oldName}', ${index}); if(event.key==='Escape') loadUsers();"
+               onblur="setTimeout(() => loadUsers(), 200)">
+      `;
+      const input = document.getElementById(`rename-input-${index}`);
+      input.focus();
+      input.select();
+    }
+
+    async function confirmRename(oldName, index) {
+      const input = document.getElementById(`rename-input-${index}`);
+      const newName = input.value.trim();
+
+      if (!newName || newName === oldName) {
+        loadUsers();
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/users/rename', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ old_name: oldName, new_name: newName }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          showToast(`Renamed to: ${newName}`, 'success');
+        } else {
+          showToast(data.message, 'error');
+        }
+        loadUsers();
+      } catch (e) {
+        showToast('Network error', 'error');
+        loadUsers();
+      }
+    }
+
+    // ============================
+    // Init
+    // ============================
+    loadUsers();
+    // Refresh user list every 5 seconds
+    setInterval(loadUsers, 5000);
+    startCamera();
+  </script>
+</body>
+
+</html>

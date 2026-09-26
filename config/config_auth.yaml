@@ -1,0 +1,68 @@
+admin:
+  password: '12345678'
+  session_secret: faceauth-secret-key-change-me
+  username: admin
+auth:
+  ab_mode:
+    enabled: true
+    global_threshold: 0.85
+  adaptive_identity:
+    enabled: true
+    max_threshold: 0.9
+    min_threshold: 0.75
+    std_multiplier: 2.0
+  antispoof_checkpoint: checkpoints/ensemble/best_model.pth
+  antispoof_model: ensemble
+  antispoof_version: v2
+  camera_id: 0
+  detector: retinaface
+  identity_threshold: 0.85
+  image_size: 112
+  key_path: data/auth/auth.key
+  liveness:
+    blink_count: 2
+    challenge_timeout: 5.0
+    debounce_frames: 3
+    ear_threshold: 0.21
+    enabled: true
+  lockout_attempt_limit: 5
+  lockout_duration: 3
+  log_path: data/auth/attempts.csv
+  max_users: 5
+  registration_real_frames: 15
+  risk_engine:
+    brightness_max: 220.0
+    brightness_min: 60.0
+    enabled: false
+    motion_max: 8.0
+    motion_min: 0.2
+    stability_window: 10
+    thresholds:
+      challenge: 0.6
+      pass: 0.8
+    weights:
+      brightness: 0.15
+      motion: 0.15
+      spoof: 0.5
+      stability: 0.2
+  smoothing: 20
+  spoof_threshold: 0.6
+  store_path: data/auth/users.enc
+security:
+  auth_quality:
+    blur_threshold: 60.0
+  ip_rate_limit:
+    auto_expire: false
+    block_duration_s: 0
+    enabled: true
+    max_fails: 15
+    window_s: 300
+  pin_2fa:
+    enabled: true
+    grace_period_s: 30
+    key_path: data/auth/pins.key
+    store_path: data/auth/pins.enc
+  session_timeout_s: 30
+  temporal_consistency:
+    consecutive_required: 2
+    enabled: true

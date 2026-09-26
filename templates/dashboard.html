@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auth Metrics Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2333;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --green: #3fb950;
+      --red: #f85149;
+      --yellow: #d29922;
+      --blue: #58a6ff;
+      --purple: #bc8cff;
+      --accent: #238636;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    header h1 span {
+      color: var(--blue);
+    }
+
+    .header-right {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .badge-green {
+      background: rgba(63, 185, 80, .15);
+      color: var(--green);
+      border: 1px solid rgba(63, 185, 80, .3);
+    }
+
+    .badge-blue {
+      background: rgba(88, 166, 255, .12);
+      color: var(--blue);
+      border: 1px solid rgba(88, 166, 255, .25);
+    }
+
+    .refresh-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: inherit;
+      transition: background .2s;
+    }
+
+    .refresh-btn:hover {
+      background: var(--border);
+    }
+
+    .home-link {
+      color: var(--blue);
+      text-decoration: none;
+      font-size: 0.8rem;
+    }
+
+    /* ── Main layout ── */
+    main {
+      padding: 28px 32px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ── Stat cards ── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .stat-card .label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .stat-card .sub {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .val-green {
+      color: var(--green);
+    }
+
+    .val-red {
+      color: var(--red);
+    }
+
+    .val-blue {
+      color: var(--blue);
+    }
+
+    .val-yellow {
+      color: var(--yellow);
+    }
+
+    /* ── Section titles ── */
+    .section-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 14px;
+    }
+
+    /* ── Chart grid ── */
+    .chart-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .chart-card h3 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      color: var(--text);
+    }
+
+    .chart-wrap {
+      position: relative;
+      height: 220px;
+    }
+
+    /* ── User table ── */
+    .table-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 28px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    thead th {
+      color: var(--muted);
+      font-weight: 600;
+      text-align: left;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    tbody td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(48, 54, 61, .6);
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover td {
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .threshold-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .threshold-bar {
+      flex: 1;
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .threshold-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--blue), var(--purple));
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .pill-green {
+      background: rgba(63, 185, 80, .15);
+      color: var(--green);
+    }
+
+    .pill-yellow {
+      background: rgba(210, 153, 34, .15);
+      color: var(--yellow);
+    }
+
+    .pill-red {
+      background: rgba(248, 81, 73, .15);
+      color: var(--red);
+    }
+
+    /* ── A/B section ── */
+    .ab-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .ab-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .ab-card .title {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .ab-card .big {
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    .ab-card .desc {
+      font-size: 0.73rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── No-data state ── */
+    .no-data {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      padding: 32px;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.72rem;
+      padding: 24px;
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .chart-grid {
+        grid-template-columns: 1fr;
+      }
+
+      main {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>🔐 <span>FaceAuth</span> Analytics Dashboard</h1>
+    <div class="header-right">
+      <span class="badge badge-green" id="live-badge">● LIVE</span>
+      <span class="badge badge-blue" id="cache-badge">Cached</span>
+      <button class="refresh-btn" onclick="loadMetrics()">↻ Refresh</button>
+      <a class="home-link" href="/">← Back to Home</a>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ── Stat cards ── -->
+    <div class="stat-grid" id="stat-grid">
+      <div class="stat-card">
+        <div class="label">Total Attempts</div>
+        <div class="value val-blue" id="s-total">—</div>
+        <div class="sub">All time</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Access Granted</div>
+        <div class="value val-green" id="s-success">—</div>
+        <div class="sub" id="s-success-rate">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Access Denied</div>
+        <div class="value val-red" id="s-fail">—</div>
+        <div class="sub">not matched</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Spoof Blocked</div>
+        <div class="value val-yellow" id="s-spoof">—</div>
+        <div class="sub" id="s-spoof-rate">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Registered Users</div>
+        <div class="value val-blue" id="s-users">—</div>
+        <div class="sub">in identity store</div>
+      </div>
+    </div>
+
+    <!-- ── Charts row ── -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>📊 Outcome Distribution</h3>
+        <div class="chart-wrap"><canvas id="chart-outcome"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>🛡️ Risk Band Distribution</h3>
+        <div class="chart-wrap"><canvas id="chart-risk"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Per-user table -->
+    <div class="section-title">Per-User Adaptive Threshold Profile</div>
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Embeddings</th>
+            <th>Adaptive Threshold</th>
+            <th>Global (0.85)</th>
+            <th>Avg Auth Similarity</th>
+            <th>Mean Embed Sim</th>
+            <th>Std</th>
+            <th>Security Profile</th>
+          </tr>
+        </thead>
+        <tbody id="user-table-body">
+          <tr>
+            <td colspan="8" class="no-data">Loading…</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <footer>
+    Face Anti-Spoofing Authentication System · Dashboard · Auto-refreshes every 15s
+  </footer>
+
+  <script>
+    let outcomeChart = null, riskChart = null;
+    const GLOBAL_THRESHOLD = 0.85;
+
+    const chartDefaults = {
+      plugins: { legend: { labels: { color: '#8b949e', font: { size: 11, family: 'Inter' } } } },
+    };
+
+    function initCharts() {
+      const ctx1 = document.getElementById('chart-outcome').getContext('2d');
+      outcomeChart = new Chart(ctx1, {
+        type: 'doughnut',
+        data: { labels: ['Access Granted', 'Spoof Blocked', 'Unauthorized'], datasets: [{ data: [0, 0, 0], backgroundColor: ['#3fb950', '#d29922', '#f85149'], borderWidth: 2, borderColor: '#161b22' }] },
+        options: { ...chartDefaults, cutout: '65%', responsive: true, maintainAspectRatio: false }
+      });
+
+      const ctx2 = document.getElementById('chart-risk').getContext('2d');
+      riskChart = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: ['PASS', 'CHALLENGE', 'FAIL'],
+          datasets: [{ label: 'Count', data: [0, 0, 0], backgroundColor: ['#3fb950', '#d29922', '#f85149'], borderRadius: 6 }]
+        },
+        options: {
+          ...chartDefaults,
+          responsive: true, maintainAspectRatio: false,
+          scales: {
+            x: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' } },
+            y: { ticks: { color: '#8b949e' }, grid: { color: '#30363d' }, beginAtZero: true }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
+    }
+
+    function securityProfile(adaptive) {
+      if (adaptive === null || adaptive === undefined) return `<span class="pill pill-yellow">Global</span>`;
+      if (adaptive >= 0.87) return `<span class="pill pill-red">Strict</span>`;
+      if (adaptive >= 0.82) return `<span class="pill pill-green">Standard</span>`;
+      return `<span class="pill pill-yellow">Relaxed</span>`;
+    }
+
+    function pct(n, total) {
+      if (!total) return '—';
+      return (n / total * 100).toFixed(1) + '%';
+    }
+
+    async function loadMetrics() {
+      try {
+        const res = await fetch('/api/dashboard_metrics');
+        const d = await res.json();
+
+        // ── Stat cards ──
+        document.getElementById('s-total').textContent = d.total_attempts;
+        document.getElementById('s-success').textContent = d.success_count;
+        document.getElementById('s-success-rate').textContent = `${d.success_rate}% success rate`;
+        document.getElementById('s-fail').textContent = d.fail_count - d.spoof_count;
+        document.getElementById('s-spoof').textContent = d.spoof_count;
+        document.getElementById('s-spoof-rate').textContent = `${d.spoof_rate}% of total`;
+        document.getElementById('s-users').textContent = d.registered_users.length;
+
+        // ── Outcome chart ──
+        const fail_non_spoof = Math.max(0, d.fail_count - d.spoof_count);
+        outcomeChart.data.datasets[0].data = [d.success_count, d.spoof_count, fail_non_spoof];
+        outcomeChart.update();
+
+        // ── Risk chart ──
+        const rd = d.risk_distribution;
+        riskChart.data.datasets[0].data = [rd.PASS || 0, rd.CHALLENGE || 0, rd.FAIL || 0];
+        riskChart.update();
+
+        // ── A/B comparison ──
+        const ab = d.ab_comparison || {};
+        document.getElementById('ab-prevented').textContent = ab.false_reject_prevented !== undefined ? `${ab.false_reject_prevented} (${pct(ab.false_reject_prevented, d.total_attempts)})` : 'N/A';
+        document.getElementById('ab-tightened').textContent = ab.security_tightened !== undefined ? `${ab.security_tightened} (${pct(ab.security_tightened, d.total_attempts)})` : 'N/A';
+        document.getElementById('ab-agreement').textContent = ab.agreement_rate !== undefined ? `${ab.agreement_rate}%` : 'Enable ab_mode in config';
+
+        // ── Per-user table ──
+        const tbody = document.getElementById('user-table-body');
+        const users = d.per_user_thresholds;
+        const names = Object.keys(users);
+        if (names.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="no-data">No registered users found</td></tr>';
+        } else {
+          tbody.innerHTML = names.map(u => {
+            const info = users[u];
+            const t = info.adaptive_threshold;
+            const tDisp = t != null ? t.toFixed(4) : '—';
+            const tPct = t !== null && t !== undefined ? ((t / 1) * 100).toFixed(1) : 50;
+            const meanSim = info.stats?.mean_similarity;
+            const stdSim = info.stats?.std_similarity;
+            const avgAuth = info.avg_similarity;
+            return `
+          <tr>
+            <td><strong>${u}</strong></td>
+            <td>${info.embedding_count}</td>
+            <td>
+              <div class="threshold-bar-wrap">
+                <div class="threshold-bar"><div class="threshold-fill" style="width:${Math.max(0, Math.min(100, (t || 0.85) * 111 - 83))}%"></div></div>
+                <span>${tDisp}</span>
+              </div>
+            </td>
+            <td style="color:var(--muted)">0.8500</td>
+            <td>${avgAuth != null ? avgAuth.toFixed(4) : '—'}</td>
+            <td>${meanSim != null ? meanSim.toFixed(4) : '—'}</td>
+            <td>${stdSim != null ? stdSim.toFixed(4) : '—'}</td>
+            <td>${securityProfile(t)}</td>
+          </tr>`;
+          }).join('');
+        }
+
+        // Badge
+        const age = Math.round(Date.now() / 1000 - d.cached_at);
+        document.getElementById('cache-badge').textContent = age < 2 ? 'Fresh' : `Cached ${age}s ago`;
+      } catch (e) {
+        console.error('Dashboard load error:', e);
+      }
+    }
+
+    initCharts();
+    loadMetrics();
+    setInterval(loadMetrics, 15000);
+  </script>
+</body>
+
+</html>

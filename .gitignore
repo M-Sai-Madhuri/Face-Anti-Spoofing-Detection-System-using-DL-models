@@ -1,0 +1,47 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Operating System Files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# IDE / Editor Files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# ==========================================
+# Biometric Portal Security Exclusions
+# ==========================================
+
+# Active credentials, encrypted database, encryption keys, and security logs
+# (CRITICAL: Never commit these files to GitHub to prevent key exposure and data leaks)
+data/auth/users.enc
+data/auth/pins.enc
+data/auth/auth.key
+data/auth/pins.key
+data/auth/attempts.csv
+
+# Local camera and session logs
+*.log
+/logs/
+/data/processed/
+/data/raw/
